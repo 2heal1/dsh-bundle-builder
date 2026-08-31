@@ -16,9 +16,9 @@ pnpm add -D dsh-bundle-builder typescript
 
 要求 Node.js `^22.19.0` 或 `>=24.0.0`。
 
-## 快速开始
+## 项目约定
 
-Builder 可以识别下面的项目目录。遵循该目录即可直接构建；需要时也可以覆盖其中的路径。
+Builder 可以识别下面的源码目录，并默认将包产物写入 `dist/`。这些路径可以通过[可选配置](#可选配置)覆盖。
 
 ```text
 my-bundle/
@@ -28,6 +28,8 @@ my-bundle/
     ├── index.ts
     └── client/index.ts   # 可选的 DSH Web 插件
 ```
+
+## 快速开始
 
 把 Cordis 声明为 peer dependency，让 DSH 提供运行时单例：
 

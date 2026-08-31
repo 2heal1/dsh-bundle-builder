@@ -16,9 +16,9 @@ pnpm add -D dsh-bundle-builder typescript
 
 Node.js `^22.19.0` or `>=24.0.0` is required.
 
-## Quick start
+## Project conventions
 
-The Builder recognizes the following project layout. A project that follows it can build without additional configuration; paths can be overridden when needed.
+The Builder recognizes the following source layout and writes the package artifact to `dist/`. These paths can be overridden through [Optional configuration](#optional-configuration).
 
 ```text
 my-bundle/
@@ -28,6 +28,8 @@ my-bundle/
     ├── index.ts
     └── client/index.ts   # optional DSH Web plugin
 ```
+
+## Quick start
 
 Declare Cordis as a peer dependency so DSH supplies the runtime singleton:
 
