@@ -1,7 +1,7 @@
 {
   "name": "dsh-bundle-builder",
   "version": "0.1.0",
-  "description": "Convention-first builder for ordinary installable DSH Bundle packages",
+  "description": "Build and validate installable DSH Bundle packages",
   "keywords": [
     "deepseek",
     "dsh",
@@ -32,14 +32,18 @@
   ],
   "scripts": {
     "build": "rslib build",
+    "changeset": "changeset",
     "lint": "oxlint src tests *.ts",
+    "prepack": "pnpm build",
     "typecheck": "tsc --noEmit",
     "test": "rstest run",
     "test:coverage": "rstest run --coverage",
     "test:built": "rstest run --config rstest.built.config.ts",
     "publint": "publint",
-    "pack:check": "npm pack --dry-run --json",
-    "check": "pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:built && pnpm publint"
+    "pack:check": "pnpm pack --dry-run",
+    "check": "pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:built && pnpm publint",
+    "version": "changeset version && pnpm install --lockfile-only --ignore-scripts",
+    "release": "changeset publish"
   },
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
@@ -54,6 +58,10 @@
   },
   "homepage": "https://github.com/2heal1/dsh-bundle-builder#readme",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
   "dependencies": {
     "@microsoft/api-extractor": "^7.59.0",
     "@rsbuild/plugin-react": "^2.1.0",
@@ -64,6 +72,7 @@
     "typescript": ">=5.0.0 <7.0.0"
   },
   "devDependencies": {
+    "@changesets/cli": "3.0.1",
     "@rstest/adapter-rslib": "^0.11.10",
     "@rstest/core": "^0.11.10",
     "@rstest/coverage-v8": "^0.11.10",

@@ -151,6 +151,8 @@ pnpm check
 
 `pnpm check` runs linting, strict type checking, Rstest coverage, the Rslib package build, built-CLI tests, and `publint`.
 
+See [Releasing](./docs/releasing.md) for the Changesets and trusted-publishing workflow.
+
 ## License
 
 [MIT](./LICENSE)

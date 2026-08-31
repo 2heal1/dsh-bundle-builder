@@ -151,6 +151,8 @@ pnpm check
 
 `pnpm check` 会依次运行 lint、严格类型检查、Rstest 覆盖率、Rslib 包构建、构建后 CLI 测试和 `publint`。
 
+Changesets 与可信发布流程见[发布说明](./docs/releasing.md)。
+
 ## License
 
 [MIT](./LICENSE)
