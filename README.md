@@ -2,7 +2,11 @@
 
 English | [中文](./README.zh-CN.md)
 
-`dsh-bundle-builder` validates and builds an ordinary installable DSH Bundle package. It uses the conventional DSH Bundle layout by default, so most projects need no Builder configuration.
+`dsh-bundle-builder` is a build tool for installable DSH Bundle packages. It validates Bundle metadata and Cordis patches, compiles Node and optional Web entries, generates TypeScript declarations and package metadata, and writes the complete package artifact to `dist/`.
+
+## Why
+
+A DSH Bundle combines executable plugin code with a Cordis patch and DSH package declarations. These files must agree on entries, exports, dependency metadata, and Web loading behavior before DSH can install and run the Bundle. The Builder validates and builds these inputs together, reporting invalid composition during the build.
 
 ## Install
 
@@ -14,7 +18,7 @@ Node.js `^22.19.0` or `>=24.0.0` is required.
 
 ## Quick start
 
-Create this layout:
+The Builder recognizes the following project layout. A project that follows it can build without additional configuration; paths can be overridden when needed.
 
 ```text
 my-bundle/

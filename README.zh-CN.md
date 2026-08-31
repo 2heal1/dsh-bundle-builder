@@ -2,7 +2,11 @@
 
 [English](./README.md) | 中文
 
-`dsh-bundle-builder` 用于校验和构建普通、可安装的 DSH Bundle 包。它默认采用 DSH Bundle 的约定目录，多数项目不需要编写 Builder 配置。
+`dsh-bundle-builder` 是用于构建可安装 DSH Bundle 包的工具。它负责校验 Bundle 元数据与 Cordis patch，编译 Node 入口和可选的 Web 入口，生成 TypeScript 类型声明与包元数据，并将完整包产物写入 `dist/`。
+
+## 为什么需要 Builder
+
+DSH Bundle 同时包含可执行的插件代码、Cordis patch 和 DSH 包声明。DSH 安装并运行 Bundle 之前，这些内容的入口、exports、依赖信息和 Web 加载方式必须保持一致。Builder 会统一校验并构建这些输入，并在构建阶段报告无效的组合关系。
 
 ## 安装
 
@@ -14,7 +18,7 @@ pnpm add -D dsh-bundle-builder typescript
 
 ## 快速开始
 
-创建以下目录：
+Builder 可以识别下面的项目目录。遵循该目录即可直接构建；需要时也可以覆盖其中的路径。
 
 ```text
 my-bundle/
