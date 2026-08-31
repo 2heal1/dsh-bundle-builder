@@ -1,20 +1,20 @@
 # DSH Bundle Builder
 
-English | [中文](./README.zh-CN.md)
+[English](./README.md) | 中文
 
-`dsh-bundle-builder` validates and builds an ordinary installable DSH Bundle package. It uses the conventional DSH Bundle layout by default, so most projects need no Builder configuration.
+`dsh-bundle-builder` 用于校验和构建普通、可安装的 DSH Bundle 包。它默认采用 DSH Bundle 的约定目录，多数项目不需要编写 Builder 配置。
 
-## Install
+## 安装
 
 ```sh
 pnpm add -D dsh-bundle-builder typescript
 ```
 
-Node.js `^22.19.0` or `>=24.0.0` is required.
+要求 Node.js `^22.19.0` 或 `>=24.0.0`。
 
-## Quick start
+## 快速开始
 
-Create this layout:
+创建以下目录：
 
 ```text
 my-bundle/
@@ -22,10 +22,10 @@ my-bundle/
 ├── cordis.patch.yml
 └── src/
     ├── index.ts
-    └── client/index.ts   # optional DSH Web plugin
+    └── client/index.ts   # 可选的 DSH Web 插件
 ```
 
-Declare Cordis as a peer dependency so DSH supplies the runtime singleton:
+把 Cordis 声明为 peer dependency，让 DSH 提供运行时单例：
 
 ```json
 {
@@ -47,7 +47,7 @@ Declare Cordis as a peer dependency so DSH supplies the runtime singleton:
 }
 ```
 
-Insert the package from `cordis.patch.yml`:
+在 `cordis.patch.yml` 中插入当前包：
 
 ```yaml
 - insert:
@@ -56,7 +56,7 @@ Insert the package from `cordis.patch.yml`:
       config: {}
 ```
 
-Export the Cordis plugin from `src/index.ts`:
+在 `src/index.ts` 中导出 Cordis 插件：
 
 ```ts
 import type { Context } from '@deepseek-ai/cordis'
@@ -64,18 +64,18 @@ import type { Context } from '@deepseek-ai/cordis'
 export interface Config {}
 
 export function apply(ctx: Context, config: Config): void {
-  // Register this Bundle's behavior.
+  // 注册这个 Bundle 的行为。
 }
 ```
 
-Then validate and build:
+执行校验和构建：
 
 ```sh
 pnpm dsh-bundle lint
 pnpm dsh-bundle build
 ```
 
-The build replaces `dist/` with the complete package artifact:
+构建会用完整的包产物替换 `dist/`：
 
 ```text
 dist/
@@ -83,23 +83,23 @@ dist/
 ├── cordis.patch.yml
 ├── index.js
 ├── index.d.ts
-├── client.js       # when src/client/index.ts exists
+├── client.js       # 存在 src/client/index.ts 时生成
 ├── client.js.map
 ├── client.d.ts
-└── assets/         # when the browser entry imports assets
+└── assets/         # 浏览器入口导入资源时生成
 ```
 
-Install `dist/` through the normal DSH plugin flow, for example:
+通过 DSH 的普通插件流程安装 `dist/`，例如：
 
 ```sh
 dsh plugin --profile demo add ./dist
 ```
 
-The browser build intentionally emits one `client.js`. Browser dynamic imports and code splitting are rejected because the ordinary DSH package format has one client entry.
+浏览器构建只允许生成一个 `client.js`。普通 DSH 包格式只有一个客户端入口，因此 Builder 会拒绝浏览器动态导入和代码分割。
 
-## Optional configuration
+## 可选配置
 
-Configure only paths that differ from the conventions:
+只配置不符合默认约定的路径：
 
 ```json
 {
@@ -117,9 +117,9 @@ Configure only paths that differ from the conventions:
 }
 ```
 
-`modules` maps a module name inserted by the patch to a source entry. The Bundle package's own name automatically maps to `src/index.ts`; installed dependency names resolve through Node.
+`modules` 把 patch 插入的模块名映射到源码入口。Bundle 自身的包名会自动映射到 `src/index.ts`，已安装的依赖包名则通过 Node 解析。
 
-Command-line paths override `package.json`:
+命令行路径会覆盖 `package.json`：
 
 ```sh
 dsh-bundle lint --cwd ./examples/basic

@@ -1,0 +1,75 @@
+{
+  "name": "dsh-bundle-builder",
+  "version": "0.1.0",
+  "description": "Convention-first builder for ordinary installable DSH Bundle packages",
+  "keywords": [
+    "deepseek",
+    "dsh",
+    "bundle",
+    "plugin",
+    "builder"
+  ],
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "dsh-bundle": "./bin.js"
+  },
+  "files": [
+    "lib",
+    "bin.js",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE",
+    "NOTICE.md"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "lint": "oxlint src tests *.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:built": "vitest run --config vitest.built.config.ts",
+    "publint": "publint",
+    "pack:check": "npm pack --dry-run --json",
+    "check": "pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:built && pnpm publint"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "packageManager": "pnpm@10.34.5",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2heal1/dsh-bundle-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/2heal1/dsh-bundle-builder/issues"
+  },
+  "homepage": "https://github.com/2heal1/dsh-bundle-builder#readme",
+  "license": "MIT",
+  "dependencies": {
+    "@swc/core": "^1.16.1",
+    "css-loader": "^7.1.4",
+    "js-yaml": "^4.2.0",
+    "style-loader": "^4.0.0",
+    "swc-loader": "^0.2.7",
+    "tsdown": "^0.22.2",
+    "typescript": "^6.0.3",
+    "webpack": "5.109.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.20.0",
+    "@vitest/coverage-v8": "^4.1.8",
+    "oxlint": "1.76.0",
+    "publint": "^0.3.21",
+    "vitest": "^4.1.8"
+  }
+}
