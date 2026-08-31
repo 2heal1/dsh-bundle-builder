@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  stable:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.1"
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: npm install --global npm@12.0.2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm run version
+          title: Release packages
+          commit: Release packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - if: steps.changesets.outputs.hasChangesets == 'false'
+        run: pnpm release
+
+  preview:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.1"
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: npm install --global npm@12.0.2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm changeset version --snapshot preview
+      - run: pnpm install --lockfile-only --ignore-scripts
+      - run: pnpm changeset publish --tag preview --no-git-tag
+      - name: Write install command
+        run: echo 'Install with `npm install dsh-bundle-builder@preview`.' >> "$GITHUB_STEP_SUMMARY"
