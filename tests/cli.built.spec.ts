@@ -1,8 +1,8 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
 import { spawnSync } from 'node:child_process'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from '@rstest/core'
 
 const roots: string[] = []
 const bin = resolve('bin.js')
@@ -20,8 +20,12 @@ function nodeOnlyFixture(): string {
     version: '1.0.0',
     type: 'module',
     peerDependencies: { '@deepseek-ai/cordis': '^4.0.0' },
+    devDependencies: { typescript: '^6.0.0' },
   })}\n`)
   writeFileSync(join(root, 'cordis.patch.yml'), '- insert:\n    - id: loader\n      name: cordis:loader\n')
+  mkdirSync(join(root, 'node_modules'))
+  symlinkSync(resolve('node_modules/typescript'), join(root, 'node_modules', 'typescript'),
+    process.platform === 'win32' ? 'junction' : 'dir')
   return root
 }
 

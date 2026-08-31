@@ -1,9 +1,9 @@
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from '@rstest/core'
 import { lintBundle, loadBundleProject } from '../src/index.ts'
 import { parsePatchSource } from '../src/patch.ts'
-import { bundleRules, exactAliases } from '../src/webpack.ts'
+import { exactAliases } from '../src/rslib.ts'
 import { cleanFixtures, fixture, installPackage, updateManifest } from './fixtures.ts'
 
 afterEach(cleanFixtures)
@@ -190,7 +190,7 @@ describe('Bundle project', () => {
     expect(() => loadBundleProject({ cwd: root, outDir: 'release' })).toThrow('refusing to replace Git working tree')
   })
 
-  it('uses process.cwd by default and exposes deterministic Webpack helpers', () => {
+  it('uses process.cwd by default and exposes deterministic Rslib aliases', () => {
     const root = fixture()
     const previous = process.cwd()
     process.chdir(root)
@@ -199,7 +199,6 @@ describe('Bundle project', () => {
     } finally {
       process.chdir(previous)
     }
-    expect(bundleRules()).toHaveLength(3)
     expect(exactAliases(new Map([
       ['absolute', '/tmp/entry.ts'],
       ['windows', 'C:\\project\\entry.ts'],

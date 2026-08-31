@@ -31,12 +31,12 @@
     "NOTICE.md"
   ],
   "scripts": {
-    "build": "tsdown",
+    "build": "rslib build",
     "lint": "oxlint src tests *.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test:built": "vitest run --config vitest.built.config.ts",
+    "test": "rstest run",
+    "test:coverage": "rstest run --coverage",
+    "test:built": "rstest run --config rstest.built.config.ts",
     "publint": "publint",
     "pack:check": "npm pack --dry-run --json",
     "check": "pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:built && pnpm publint"
@@ -55,21 +55,22 @@
   "homepage": "https://github.com/2heal1/dsh-bundle-builder#readme",
   "license": "MIT",
   "dependencies": {
-    "@swc/core": "^1.16.1",
-    "css-loader": "^7.1.4",
-    "js-yaml": "^4.2.0",
-    "style-loader": "^4.0.0",
-    "swc-loader": "^0.2.7",
-    "tsdown": "^0.22.2",
-    "typescript": "^6.0.3",
-    "webpack": "5.109.0"
+    "@microsoft/api-extractor": "^7.59.0",
+    "@rsbuild/plugin-react": "^2.1.0",
+    "@rslib/core": "^0.23.2",
+    "js-yaml": "^4.2.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0 <7.0.0"
   },
   "devDependencies": {
+    "@rstest/adapter-rslib": "^0.11.10",
+    "@rstest/core": "^0.11.10",
+    "@rstest/coverage-v8": "^0.11.10",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.20.0",
-    "@vitest/coverage-v8": "^4.1.8",
     "oxlint": "1.76.0",
     "publint": "^0.3.21",
-    "vitest": "^4.1.8"
+    "typescript": "^6.0.3"
   }
 }

@@ -4,6 +4,21 @@ English | [中文](./README.zh-CN.md)
 
 `dsh-bundle-builder` validates and builds an ordinary installable DSH Bundle package. It uses the conventional DSH Bundle layout by default, so most projects need no Builder configuration.
 
+## What it provides
+
+A DSH Bundle is one installable composition layer rather than only one plugin entry. Its patch can assemble the Bundle's own Cordis plugin, installed plugin dependencies, and their configuration in a defined order. The Builder turns that source layer into a package DSH can add to a Profile.
+
+With one build, a Bundle can provide:
+
+- a Node plugin entry and its TypeScript declarations;
+- an optional DSH Web plugin with TypeScript, TSX, CSS Modules, and static assets;
+- the `cordis.patch.yml` layer that composes its plugins;
+- a generated package manifest with the DSH declarations and exports needed by the Host.
+
+The conventional layout keeps authoring focused on plugin code and composition. Cordis remains a peer dependency, so the installed Bundle participates in the Host's existing context instead of creating a second Cordis runtime. Ordinary runtime dependencies remain package dependencies and are installed by the package manager. The resulting `dist/` can be inspected, packed, published, or installed from a filesystem path through the same package workflow.
+
+The build pipeline uses [Rslib](https://rslib.rs/) for the Builder itself and for emitted Node and Web artifacts. The repository uses [Rstest](https://rstest.rs/) so tests exercise the same Rspack-based compilation model.
+
 ## Install
 
 ```sh
@@ -135,6 +150,15 @@ const project = lintBundle({ cwd: process.cwd() })
 const result = await buildBundle({ cwd: project.cwd })
 console.log(result.packageDir)
 ```
+
+## Develop this Builder
+
+```sh
+pnpm install
+pnpm check
+```
+
+`pnpm check` runs linting, strict type checking, Rstest coverage, the Rslib package build, built-CLI tests, and `publint`.
 
 ## License
 

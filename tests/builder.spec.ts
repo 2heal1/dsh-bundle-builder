@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { runInNewContext } from 'node:vm'
+import { afterEach, describe, expect, it } from '@rstest/core'
 import { buildBundle } from '../src/index.ts'
 import { cleanFixtures, fixture, updateManifest } from './fixtures.ts'
 
@@ -9,6 +10,14 @@ afterEach(cleanFixtures)
 describe('Bundle package build', () => {
   it('emits a complete Node and browser package directly in dist', async () => {
     const root = fixture({ client: true })
+    writeFileSync(join(root, 'src', 'config.ts'), 'export interface FixtureConfig { value?: string }\n')
+    writeFileSync(join(root, 'src', 'index.ts'), [
+      "import type { Context } from '@deepseek-ai/cordis'",
+      "import type { FixtureConfig } from './config.ts'",
+      'export interface Config extends FixtureConfig {}',
+      'export function apply(_ctx: Context, _config: Config): void {}',
+      '',
+    ].join('\n'))
     updateManifest(root, (manifest) => {
       manifest.dependencies = { runtime: '^1.0.0' }
       manifest.dsh = { client: { inject: ['maps'], external: ['runtime'], immediately: true } }
@@ -22,7 +31,21 @@ describe('Bundle package build', () => {
     for (const name of ['package.json', 'cordis.patch.yml', 'index.js', 'index.d.ts', 'client.js', 'client.js.map', 'client.d.ts']) {
       expect(existsSync(join(result.packageDir, name)), name).toBe(true)
     }
-    expect(readFileSync(join(result.packageDir, 'client.js'), 'utf8')).toContain('window.__ModuleLoader__.load')
+    const nodeTypes = readFileSync(join(result.packageDir, 'index.d.ts'), 'utf8')
+    expect(nodeTypes).toContain('FixtureConfig')
+    expect(nodeTypes).not.toContain('./config')
+    const clientSource = readFileSync(join(result.packageDir, 'client.js'), 'utf8')
+    expect(clientSource).toContain('window.__ModuleLoader__.load')
+    let registration: { factory: (require: (request: string) => unknown) => Record<string, unknown> } | undefined
+    runInNewContext(clientSource, {
+      window: { __ModuleLoader__: { load: (value: typeof registration) => { registration = value } } },
+    })
+    expect(registration?.factory(request => new Proxy({}, {
+      get: (_target, property) => { throw new Error(`unexpected client external ${request}.${String(property)}`) },
+    }))).toMatchObject({
+      name: 'fixture-client',
+      apply: expect.any(Function),
+    })
     const manifest = JSON.parse(readFileSync(join(result.packageDir, 'package.json'), 'utf8')) as Record<string, unknown>
     expect(manifest).toMatchObject({
       name: 'fixture-dsh-bundle',
@@ -53,6 +76,34 @@ describe('Bundle package build', () => {
     }
     expect(manifest.exports).not.toHaveProperty('./client')
     await expect(import(join(result.packageDir, 'index.js'))).resolves.toBeTypeOf('object')
+  }, 30_000)
+
+  it('builds a TSX client with CSS Modules and static assets', async () => {
+    const root = fixture({ client: true })
+    rmSync(join(root, 'src', 'client', 'index.ts'))
+    writeFileSync(join(root, 'src', 'client', 'styles.d.ts'), [
+      "declare module '*.module.css' {",
+      '  const classes: Record<string, string>',
+      '  export default classes',
+      '}',
+      '',
+    ].join('\n'))
+    writeFileSync(join(root, 'src', 'client', 'index.tsx'), [
+      '/// <reference path="./styles.d.ts" />',
+      "import styles from './styles.module.css'",
+      "export const className = styles.root ?? ''",
+      '',
+    ].join('\n'))
+    writeFileSync(join(root, 'src', 'client', 'styles.module.css'), '.root { background: url(./marker.svg); }\n')
+    writeFileSync(join(root, 'src', 'client', 'marker.svg'), `<svg xmlns="http://www.w3.org/2000/svg">${' '.repeat(12_000)}</svg>\n`)
+    updateManifest(root, (manifest) => {
+      manifest.dsh = { bundleBuilder: { clientEntry: 'src/client/index.tsx' } }
+    })
+
+    const result = await buildBundle({ cwd: root })
+    expect(readFileSync(join(result.packageDir, 'client.js'), 'utf8')).toContain('className')
+    expect(readFileSync(join(result.packageDir, 'client.d.ts'), 'utf8')).toContain('className')
+    expect(readdirSync(join(result.packageDir, 'assets'))).toContainEqual(expect.stringMatching(/\.svg$/))
   }, 30_000)
 
   it('rejects browser code splitting without replacing the previous artifact', async () => {

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, rs } from '@rstest/core'
 import { parseArgs, runCli, usage } from '../src/cli.ts'
 import { cleanFixtures, fixture } from './fixtures.ts'
 
@@ -51,7 +51,7 @@ describe('CLI', () => {
     expect(await runCli(['build', '--cwd', root], build.io)).toBe(0)
     expect(build.stdout).toEqual([`package: ${root}/dist\n`])
 
-    const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
+    const stdout = rs.spyOn(process.stdout, 'write').mockImplementation(() => true)
     try {
       expect(await runCli(['--help'])).toBe(0)
       expect(stdout).toHaveBeenCalledWith(expect.stringContaining('Usage: dsh-bundle'))

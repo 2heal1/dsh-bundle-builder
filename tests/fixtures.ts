@@ -1,6 +1,6 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 
 const roots: string[] = []
 
@@ -19,7 +19,7 @@ export function fixture(options: { client?: boolean; node?: boolean; peer?: bool
     version: '1.0.0',
     type: 'module',
     ...(options.peer === false ? {} : { peerDependencies: { '@deepseek-ai/cordis': '^4.0.0' } }),
-    devDependencies: { '@deepseek-ai/cordis': '^4.0.0', privateTool: '1.0.0' },
+    devDependencies: { '@deepseek-ai/cordis': '^4.0.0', privateTool: '1.0.0', typescript: '^6.0.0' },
     scripts: { build: 'private-command' },
   }, undefined, 2)}\n`)
   writeFileSync(join(root, 'cordis.patch.yml'), options.patch ?? [
@@ -52,6 +52,8 @@ export function fixture(options: { client?: boolean; node?: boolean; peer?: bool
     type: 'module',
     exports: { '.': './index.js', './package.json': './package.json' },
   }, 'export interface Context {}\n')
+  symlinkSync(resolve('node_modules/typescript'), join(root, 'node_modules', 'typescript'),
+    process.platform === 'win32' ? 'junction' : 'dir')
   return root
 }
 
