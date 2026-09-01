@@ -20,7 +20,7 @@ pnpm add -D dsh-bundle-builder typescript
 
 ## 兼容性
 
-`dsh-bundle-builder@0.1.x` 已针对 `@deepseek-ai/dsh@0.1.0-rc.8` 的 Bundle 包格式和 `@deepseek-ai/cordis@4.0.1` 进行测试。DSH 仍处于候选版本阶段，升级 DSH 或 Cordis 后应重新运行 `dsh-bundle lint`。
+`dsh-bundle-builder@0.1.x` 面向当前 DSH Bundle 包格式，并接受 `@deepseek-ai/cordis ^4.0.0` 作为 Bundle 的 peer dependency。升级 DSH 或 Cordis 后应重新运行 `dsh-bundle lint`。
 
 ## 项目约定
 

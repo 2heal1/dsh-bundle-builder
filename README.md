@@ -20,7 +20,7 @@ Node.js `^22.19.0` or `>=24.0.0` is required.
 
 ## Compatibility
 
-`dsh-bundle-builder@0.1.x` is tested against the Bundle package format in `@deepseek-ai/dsh@0.1.0-rc.8` and `@deepseek-ai/cordis@4.0.1`. DSH is still in release-candidate development, so run `dsh-bundle lint` after upgrading DSH or Cordis.
+`dsh-bundle-builder@0.1.x` targets the current DSH Bundle package format and accepts `@deepseek-ai/cordis ^4.0.0` as the Bundle peer dependency. Run `dsh-bundle lint` after upgrading DSH or Cordis.
 
 ## Project conventions
 
