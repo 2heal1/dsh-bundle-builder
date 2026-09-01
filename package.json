@@ -1,6 +1,6 @@
 {
   "name": "dsh-bundle-builder",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Build and validate installable DSH Bundle packages",
   "keywords": [
     "deepseek",
