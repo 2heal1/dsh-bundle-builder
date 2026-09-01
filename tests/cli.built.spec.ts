@@ -39,11 +39,11 @@ describe('built executable', () => {
 
   it('validates and builds a conventional Bundle', () => {
     const root = nodeOnlyFixture()
-    const lint = spawnSync(process.execPath, [bin, 'lint', '--cwd', root], { encoding: 'utf8' })
+    const lint = spawnSync(process.execPath, [bin, 'lint', '--cwd', root, '--target', 'package'], { encoding: 'utf8' })
     expect(lint.status).toBe(0)
     expect(lint.stdout).toContain('built-cli-fixture is valid')
 
-    const build = spawnSync(process.execPath, [bin, 'build', '--cwd', root], { encoding: 'utf8' })
+    const build = spawnSync(process.execPath, [bin, 'build', '--cwd', root, '--target', 'package'], { encoding: 'utf8' })
     expect(build.status).toBe(0)
     expect(build.stdout).toContain(`package: ${join(root, 'dist')}`)
     expect(build.stderr).toBe('')

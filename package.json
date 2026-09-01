@@ -1,13 +1,14 @@
 {
   "name": "dsh-bundle-builder",
   "version": "0.1.1",
-  "description": "Build and validate installable DSH Bundle packages",
+  "description": "Validate and build installable or remotely loadable DSH Bundles",
   "keywords": [
     "deepseek",
     "dsh",
     "bundle",
     "plugin",
-    "builder"
+    "builder",
+    "remote"
   ],
   "type": "module",
   "main": "./lib/index.js",
@@ -65,6 +66,8 @@
   },
   "dependencies": {
     "@microsoft/api-extractor": "^7.59.0",
+    "@module-federation/node": "^2.7.50",
+    "@module-federation/runtime-tools": "^2.9.0",
     "@rsbuild/plugin-react": "^2.1.0",
     "@rslib/core": "^0.23.2",
     "js-yaml": "^4.2.0"

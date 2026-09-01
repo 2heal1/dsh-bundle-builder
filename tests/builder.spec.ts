@@ -25,16 +25,17 @@ describe('Bundle package build', () => {
     mkdirSync(join(root, 'dist'), { recursive: true })
     writeFileSync(join(root, 'dist', 'stale.txt'), 'stale\n')
 
-    const result = await buildBundle({ cwd: root })
-    expect(result.packageDir).toBe(join(root, 'dist'))
-    expect(existsSync(join(result.packageDir, 'stale.txt'))).toBe(false)
+    const result = await buildBundle({ cwd: root, target: 'package' })
+    const packageDir = result.packageDir!
+    expect(packageDir).toBe(join(root, 'dist'))
+    expect(existsSync(join(packageDir, 'stale.txt'))).toBe(false)
     for (const name of ['package.json', 'cordis.patch.yml', 'index.js', 'index.d.ts', 'client.js', 'client.js.map', 'client.d.ts']) {
-      expect(existsSync(join(result.packageDir, name)), name).toBe(true)
+      expect(existsSync(join(packageDir, name)), name).toBe(true)
     }
-    const nodeTypes = readFileSync(join(result.packageDir, 'index.d.ts'), 'utf8')
+    const nodeTypes = readFileSync(join(packageDir, 'index.d.ts'), 'utf8')
     expect(nodeTypes).toContain('FixtureConfig')
     expect(nodeTypes).not.toContain('./config')
-    const clientSource = readFileSync(join(result.packageDir, 'client.js'), 'utf8')
+    const clientSource = readFileSync(join(packageDir, 'client.js'), 'utf8')
     expect(clientSource).toContain('window.__ModuleLoader__.load')
     let registration: { factory: (require: (request: string) => unknown) => Record<string, unknown> } | undefined
     runInNewContext(clientSource, {
@@ -46,7 +47,7 @@ describe('Bundle package build', () => {
       name: 'fixture-client',
       apply: expect.any(Function),
     })
-    const manifest = JSON.parse(readFileSync(join(result.packageDir, 'package.json'), 'utf8')) as Record<string, unknown>
+    const manifest = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8')) as Record<string, unknown>
     expect(manifest).toMatchObject({
       name: 'fixture-dsh-bundle',
       version: '1.0.0',
@@ -68,14 +69,15 @@ describe('Bundle package build', () => {
 
   it('emits a loadable empty Node entry when the Bundle only patches builtins', async () => {
     const root = fixture({ node: false, patch: '- insert:\n    - id: loader\n      name: cordis:loader\n' })
-    const result = await buildBundle({ cwd: root })
-    expect(existsSync(join(result.packageDir, 'index.js'))).toBe(true)
-    expect(existsSync(join(result.packageDir, 'index.d.ts'))).toBe(true)
-    const manifest = JSON.parse(readFileSync(join(result.packageDir, 'package.json'), 'utf8')) as {
+    const result = await buildBundle({ cwd: root, target: 'package' })
+    const packageDir = result.packageDir!
+    expect(existsSync(join(packageDir, 'index.js'))).toBe(true)
+    expect(existsSync(join(packageDir, 'index.d.ts'))).toBe(true)
+    const manifest = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8')) as {
       exports: Record<string, unknown>
     }
     expect(manifest.exports).not.toHaveProperty('./client')
-    await expect(import(join(result.packageDir, 'index.js'))).resolves.toBeTypeOf('object')
+    await expect(import(join(packageDir, 'index.js'))).resolves.toBeTypeOf('object')
   }, 30_000)
 
   it('builds a TSX client with CSS Modules and static assets', async () => {
@@ -100,10 +102,11 @@ describe('Bundle package build', () => {
       manifest.dsh = { bundleBuilder: { clientEntry: 'src/client/index.tsx' } }
     })
 
-    const result = await buildBundle({ cwd: root })
-    expect(readFileSync(join(result.packageDir, 'client.js'), 'utf8')).toContain('className')
-    expect(readFileSync(join(result.packageDir, 'client.d.ts'), 'utf8')).toContain('className')
-    expect(readdirSync(join(result.packageDir, 'assets'))).toContainEqual(expect.stringMatching(/\.svg$/))
+    const result = await buildBundle({ cwd: root, target: 'package' })
+    const packageDir = result.packageDir!
+    expect(readFileSync(join(packageDir, 'client.js'), 'utf8')).toContain('className')
+    expect(readFileSync(join(packageDir, 'client.d.ts'), 'utf8')).toContain('className')
+    expect(readdirSync(join(packageDir, 'assets'))).toContainEqual(expect.stringMatching(/\.svg$/))
   }, 30_000)
 
   it('rejects browser code splitting without replacing the previous artifact', async () => {
@@ -113,7 +116,8 @@ describe('Bundle package build', () => {
     writeFileSync(join(root, 'src', 'client', 'lazy.ts'), 'export const lazy = true\n')
     writeFileSync(join(root, 'src', 'client', 'index.ts'), "export const load = () => import('./lazy.ts')\n")
 
-    await expect(buildBundle({ cwd: root })).rejects.toThrow('dynamic imports and code splitting are unsupported')
+    await expect(buildBundle({ cwd: root, target: 'package' }))
+      .rejects.toThrow('dynamic imports and code splitting are unsupported')
     expect(readFileSync(join(root, 'dist', 'previous.txt'), 'utf8')).toBe('previous\n')
   }, 30_000)
 })

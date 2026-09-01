@@ -1,12 +1,18 @@
 /** Convention and package.json configuration resolution for DSH Bundle builds. */
 
+import { randomUUID } from 'node:crypto'
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
 import { parsePatchSource, type PatchEntry, type PatchOptions } from './patch.ts'
 
+/** Artifact families emitted by the Builder. */
+export type BundleBuilderTarget = 'package' | 'remote' | 'dual'
+
 /** Optional `package.json#dsh.bundleBuilder` path overrides. */
 export interface BundleBuilderConfig {
+  /** Artifact family; defaults to `dual`. */
+  target?: BundleBuilderTarget
   /** Output directory; defaults to `dist`. */
   outDir?: string
   /** Patch document; defaults to `cordis.patch.yml`. */
@@ -17,17 +23,23 @@ export interface BundleBuilderConfig {
   clientEntry?: string
   /** Explicit patch-specifier to source-entry mappings. */
   modules?: Record<string, string>
+  /** Immutable remote build identifier; defaults to a new UUID. */
+  buildId?: string
 }
 
 /** Command-line overrides over package.json configuration. */
 export interface BundleBuilderOverrides {
   /** Project directory; defaults to the current directory. */
   cwd?: string
+  /** Artifact-family override. */
+  target?: BundleBuilderTarget
   /** Output-directory override. */
   outDir?: string
+  /** Immutable remote build identifier override. */
+  buildId?: string
 }
 
-/** Validated inputs for one ordinary DSH Bundle package build. */
+/** Validated inputs shared by package and remote DSH Bundle builds. */
 export interface BundleProject {
   /** Absolute project directory. */
   cwd: string
@@ -37,6 +49,8 @@ export interface BundleProject {
   name: string
   /** Bundle package version. */
   version: string
+  /** Selected artifact family. */
+  target: BundleBuilderTarget
   /** Absolute output directory. */
   outDir: string
   /** Absolute patch path. */
@@ -49,8 +63,12 @@ export interface BundleProject {
   clientEntry?: string
   /** Patch module specifier to source entry or dependency request. */
   modules: Map<string, string>
+  /** Immutable identifier stamped into remote artifacts. */
+  buildId: string
   /** Publishable peer dependency ranges. */
   peers: Record<string, string>
+  /** Declared dependency ranges used to select browser shares. */
+  versions: Record<string, string>
   /** Browser Cordis dependency metadata copied to the built package. */
   client: {
     inject: string[]
@@ -59,7 +77,7 @@ export interface BundleProject {
   }
 }
 
-const CONFIG_FIELDS = new Set(['outDir', 'patch', 'nodeEntry', 'clientEntry', 'modules'])
+const CONFIG_FIELDS = new Set(['target', 'outDir', 'patch', 'nodeEntry', 'clientEntry', 'modules', 'buildId'])
 
 function object(value: unknown): Record<string, unknown> | undefined {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -203,6 +221,12 @@ export function loadBundleProject(overrides: BundleBuilderOverrides = {}): Bundl
   if (unknownFields.length !== 0) {
     throw new Error(`dsh-bundle: unknown package.json#dsh.bundleBuilder field ${JSON.stringify(unknownFields[0])}`)
   }
+  const configuredTarget = rawConfig.target
+  if (configuredTarget !== undefined
+    && configuredTarget !== 'package' && configuredTarget !== 'remote' && configuredTarget !== 'dual') {
+    throw new Error('dsh-bundle: package.json#dsh.bundleBuilder.target must be "package", "remote", or "dual"')
+  }
+  const target = overrides.target ?? configuredTarget ?? 'dual'
   const rawOutDir = overrides.outDir ?? rawConfig.outDir ?? 'dist'
   if (typeof rawOutDir !== 'string' || rawOutDir === '') throw new Error('dsh-bundle: outDir must be a non-empty string')
   const outDir = absolute(cwd, rawOutDir)
@@ -242,6 +266,15 @@ export function loadBundleProject(overrides: BundleBuilderOverrides = {}): Bundl
   if (peers['@deepseek-ai/cordis'] === undefined) {
     throw new Error('dsh-bundle: peerDependencies must declare @deepseek-ai/cordis so DSH supplies its singleton')
   }
+  const versions = {
+    ...stringRecord('dependencies', packageJson.dependencies),
+    ...stringRecord('devDependencies', packageJson.devDependencies),
+    ...peers,
+  }
+  const configuredBuildId = rawConfig.buildId
+  if (configuredBuildId !== undefined && (typeof configuredBuildId !== 'string' || configuredBuildId === '')) {
+    throw new Error('dsh-bundle: package.json#dsh.bundleBuilder.buildId must be a non-empty string')
+  }
   const clientDecl = object(dsh?.client)
   if (dsh?.client !== undefined && clientDecl === undefined) {
     throw new Error('dsh-bundle: package.json#dsh.client must be an object')
@@ -261,13 +294,16 @@ export function loadBundleProject(overrides: BundleBuilderOverrides = {}): Bundl
     packageJson,
     name: packageJson.name,
     version: packageJson.version,
+    target,
     outDir,
     patchPath,
     patches,
     ...(nodeEntry === undefined ? {} : { nodeEntry }),
     ...(clientEntry === undefined ? {} : { clientEntry }),
     modules,
+    buildId: overrides.buildId ?? configuredBuildId ?? randomUUID(),
     peers,
+    versions,
     client: {
       inject: optionalStringArray('package.json#dsh.client.inject', clientDecl?.inject),
       external: optionalStringArray('package.json#dsh.client.external', clientDecl?.external),
