@@ -20,7 +20,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "dsh-bundle": "./bin.js"
+    "dsh-bundle": "bin.js"
   },
   "files": [
     "lib",
@@ -43,7 +43,7 @@
     "pack:check": "pnpm pack --dry-run",
     "check": "pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm test:built && pnpm publint",
     "version": "changeset version && pnpm install --lockfile-only --ignore-scripts",
-    "release": "changeset publish"
+    "release": "npm publish --provenance --access public"
   },
   "engines": {
     "node": "^22.19.0 || >=24.0.0"

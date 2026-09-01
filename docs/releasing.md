@@ -5,4 +5,4 @@
 3. Merge the normal pull request to create or update the release pull request.
 4. Review and merge the release pull request to publish the stable version.
 
-Stable and preview releases use npm trusted publishing from `.github/workflows/release.yml`. The repository does not store an npm token.
+Changesets manages versions and the release pull request. Stable and preview artifacts are published by npm CLI with trusted publishing from `.github/workflows/release.yml`; the repository does not store an npm token.
