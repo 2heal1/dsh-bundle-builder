@@ -26,9 +26,11 @@ describe('Bundle project', () => {
     expect(project).toMatchObject({
       name: 'fixture-dsh-bundle',
       version: '1.0.0',
+      target: 'dual',
       outDir: join(root, 'dist'),
       client: { inject: [], external: [], immediately: false },
     })
+    expect(project.buildId).toMatch(/^[0-9a-f-]{36}$/)
     expect(project.nodeEntry).toBe(join(root, 'src', 'index.ts'))
     expect(project.clientEntry).toBe(join(root, 'src', 'client', 'index.ts'))
     expect(project.modules).toEqual(new Map([['fixture-dsh-bundle', project.nodeEntry!]]))
@@ -56,17 +58,21 @@ describe('Bundle project', () => {
       manifest.dsh = {
         client: { inject: ['maps'], external: ['fixture-dependency'], immediately: true },
         bundleBuilder: {
+          target: 'package',
           outDir: 'artifact',
           patch: 'cordis.patch.yml',
           nodeEntry: 'src/index.ts',
           clientEntry: 'src/client/index.ts',
           modules: { 'fixture-dsh-bundle': 'src/other.ts' },
+          buildId: 'configured-build',
         },
       }
     })
     const project = lintBundle({ cwd: root, outDir: 'command-output' })
     expect(project).toMatchObject({
+      target: 'package',
       outDir: join(root, 'command-output'),
+      buildId: 'configured-build',
       client: { inject: ['maps'], external: ['fixture-dependency'], immediately: true },
     })
     expect(project.modules.get('fixture-dsh-bundle')).toBe(join(root, 'src', 'other.ts'))
@@ -116,7 +122,8 @@ describe('Bundle project', () => {
       [(manifest) => { manifest.dsh = { bundleBuilder: { nodeEntry: 1 } } }, 'nodeEntry must be a non-empty string'],
       [(manifest) => { manifest.dsh = { bundleBuilder: { nodeEntry: 'missing.ts' } } }, 'nodeEntry not found'],
       [(manifest) => { manifest.dsh = { bundleBuilder: { modules: [] } } }, 'modules must be an object'],
-      [(manifest) => { manifest.dsh = { bundleBuilder: { target: 'dual' } } }, 'unknown package.json#dsh.bundleBuilder field'],
+      [(manifest) => { manifest.dsh = { bundleBuilder: { target: 'other' } } }, 'target must be'],
+      [(manifest) => { manifest.dsh = { bundleBuilder: { buildId: 1 } } }, 'buildId must be a non-empty string'],
     ]
     for (const [mutate, message] of cases) {
       const root = fixture()
@@ -175,6 +182,24 @@ describe('Bundle project', () => {
 
     const uninsertedClient = fixture({ client: true, patch: '[]\n' })
     expect(() => lintBundle({ cwd: uninsertedClient })).toThrow('requires the patch to insert')
+
+    const dependencyClient = fixture({ patch: [
+      '- insert:',
+      '    - id: fixture',
+      '      name: fixture-dsh-bundle',
+      '    - id: browser-dependency',
+      '      name: browser-dependency',
+      '',
+    ].join('\n') })
+    installPackage(dependencyClient, 'browser-dependency', {
+      name: 'browser-dependency',
+      version: '1.0.0',
+      exports: { '.': './index.js' },
+      dsh: { client: { platform: 'web' } },
+    })
+    expect(() => lintBundle({ cwd: dependencyClient, target: 'remote' }))
+      .toThrow('remote target cannot include browser plugin')
+    expect(() => lintBundle({ cwd: dependencyClient, target: 'package' })).not.toThrow()
   })
 
   it('protects source directories from output replacement', () => {

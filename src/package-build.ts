@@ -242,7 +242,7 @@ function packageManifest(project: BundleProject): Record<string, unknown> {
 function publishPackageRoot(stagingDir: string, outDir: string): void {
   const stagingName = basename(stagingDir)
   for (const name of readdirSync(outDir)) {
-    if (name === stagingName) continue
+    if (name === 'remote' || name === stagingName) continue
     rmSync(join(outDir, name), { recursive: true, force: true })
   }
   for (const name of readdirSync(stagingDir)) renameSync(join(stagingDir, name), join(outDir, name))
