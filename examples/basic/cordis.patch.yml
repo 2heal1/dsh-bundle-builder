@@ -1,0 +1,5 @@
+- insert:
+    - id: example-dsh-bundle
+      name: example-dsh-bundle
+      config:
+        message: Example DSH Bundle loaded

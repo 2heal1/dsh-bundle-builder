@@ -4,6 +4,8 @@
 
 `dsh-bundle-builder` 是用于构建可安装 DSH Bundle 包的工具。它负责校验 Bundle 元数据与 Cordis patch，编译 Node 入口和可选的 Web 入口，生成 TypeScript 类型声明与包元数据，并将完整包产物写入 `dist/`。
 
+> `dsh-bundle-builder` 是独立的社区项目，不是 DeepSeek AI 官方项目。
+
 ## 为什么需要 Builder
 
 DSH Bundle 同时包含可执行的插件代码、Cordis patch 和 DSH 包声明。DSH 安装并运行 Bundle 之前，这些内容的入口、exports、依赖信息和 Web 加载方式必须保持一致。Builder 会统一校验并构建这些输入，并在构建阶段报告无效的组合关系。
@@ -15,6 +17,10 @@ pnpm add -D dsh-bundle-builder typescript
 ```
 
 要求 Node.js `^22.19.0` 或 `>=24.0.0`。
+
+## 兼容性
+
+`dsh-bundle-builder@0.1.x` 已针对 `@deepseek-ai/dsh@0.1.0-rc.8` 的 Bundle 包格式和 `@deepseek-ai/cordis@4.0.1` 进行测试。DSH 仍处于候选版本阶段，升级 DSH 或 Cordis 后应重新运行 `dsh-bundle lint`。
 
 ## 项目约定
 
@@ -43,7 +49,7 @@ my-bundle/
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.0",
-    "dsh-bundle-builder": "^0.1.0",
+    "dsh-bundle-builder": "^0.1.1",
     "typescript": "^6.0.0"
   },
   "scripts": {
@@ -102,6 +108,14 @@ dsh plugin --profile demo add ./dist
 ```
 
 浏览器构建只允许生成一个 `client.js`。普通 DSH 包格式只有一个客户端入口，因此 Builder 会拒绝浏览器动态导入和代码分割。
+
+## 示例
+
+[`examples/basic`](./examples/basic) 是一个同时包含 Node 和 Web 入口的完整 Bundle。仓库的 `pnpm check` 会构建这个示例，确保它始终与 Builder 保持一致：
+
+```sh
+pnpm example:build
+```
 
 ## 可选配置
 
