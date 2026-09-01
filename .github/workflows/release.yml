@@ -37,7 +37,22 @@ jobs:
           commit: Release packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - if: steps.changesets.outputs.hasChangesets == 'false'
+      - id: registry
+        if: steps.changesets.outputs.hasChangesets == 'false'
+        name: Check published version
+        shell: bash
+        run: |
+          package_ref="$(node -p "const packageJson = require('./package.json'); packageJson.name + '@' + packageJson.version")"
+          if registry_result="$(npm view "$package_ref" version --json 2>&1)"; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "\`$package_ref\` is already published." >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$registry_result" == *"E404"* ]]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$registry_result" >&2
+            exit 1
+          fi
+      - if: steps.registry.outputs.publish == 'true'
         run: pnpm release
 
   preview:
@@ -63,6 +78,6 @@ jobs:
       - run: pnpm check
       - run: pnpm changeset version --snapshot preview
       - run: pnpm install --lockfile-only --ignore-scripts
-      - run: pnpm changeset publish --tag preview --no-git-tag
+      - run: npm publish --provenance --access public --tag preview
       - name: Write install command
         run: echo 'Install with `npm install dsh-bundle-builder@preview`.' >> "$GITHUB_STEP_SUMMARY"
